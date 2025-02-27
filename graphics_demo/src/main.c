@@ -1,5 +1,13 @@
 #include <stm32f031x6.h>
 #include "display.h"
+
+#define MAX_SIZE 30
+#define MIN_Y 20
+#define MAX_Y 131
+#define MIN_X 10
+#define MAX_X 110
+
+
 void initClock(void);
 void initSysTick(void);
 void SysTick_Handler(void);
@@ -34,13 +42,18 @@ const uint16_t snake[]=
 };
 
 void move(int direction);
-
+void updateBody();
 
 int x = 50;
 int y = 50;
+int snakeBody[3][MAX_SIZE] = {0};
+int applesEaten = 1;
+void drawBorder();
 
 int main()
 {
+	
+
 	int hinverted = 0;
 	int vinverted = 0;
 	int toggle = 0;
@@ -50,16 +63,27 @@ int main()
 	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
 	short currentCycle = 1;
 
-	uint16_t x = 50;
-	uint16_t y = 50;
+	uint16_t x = MIN_X;
+	uint16_t y = MAX_Y - 8;
 	uint16_t oldx = x;
 	uint16_t oldy = y;
+	
 	initClock();
 	initSysTick();
 	setupIO();
 	putImage(20,80,12,16,dg1,0,0);
+
+	drawBorder();
+	printTextX2("SCORE:", 0, 0, RGBToWord(0xff,0xff,0), 0);
+
+	snakeBody[0][0] = 1; //place head
+	snakeBody[0][1] = 1;
+	snakeBody[0][2] = 1;
+	snakeBody[0][3] = 1;
+
 	while(1)
 	{
+		
 		
 		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 		{			
@@ -191,7 +215,7 @@ void move(int direction)
 	{
 		case 0: // right
 		{
-			if (x < 110)
+			if (x < MAX_X)
 			{
 				x = x + 10;
 				// hinverted=0;
@@ -201,7 +225,7 @@ void move(int direction)
 
 		case 1: // down
 		{
-			if (y < 140)
+			if (y < MAX_Y)
 			{
 				y = y + 10;
 			}
@@ -210,7 +234,7 @@ void move(int direction)
 
 		case 2: // left
 		{
-			if (x > 10)
+			if (x > MIN_X)
 			{
 				x = x - 10;
 			}
@@ -219,7 +243,7 @@ void move(int direction)
 
 		case 3: // up
 		{
-			if (y > 16)
+			if (y > MIN_Y)
 			{
 				y = y - 10;
 			}
@@ -228,4 +252,43 @@ void move(int direction)
 	}
 
 	putImage(x,y,8,8,snake,0,0);
+
+	updateBody();
+}
+
+void updateBody()
+{
+	short i = 0;
+
+	// find end of snake (first 0 element)
+	while( snakeBody[0][i] != 0)
+	{
+		i++;
+	}
+	i--;
+
+	// delete trailing body piece
+	if (snakeBody[1][i] != 0)
+	{
+		fillRectangle(snakeBody[1][i],snakeBody[2][i],8,8,0);
+	}
+	
+
+
+	// propagate movement from back to front -- keep track of where body pieces are
+	for (int j = i; j > 0; j--)
+	{
+		snakeBody[1][j] = snakeBody[1][j-1];
+		snakeBody[2][j] = snakeBody[2][j-1];
+	}
+
+	snakeBody[1][0] = x;
+	snakeBody[2][0] = y;
+	
+}
+
+void drawBorder()
+{
+	fillRectangle(MIN_X - 2, MIN_Y - 2, MAX_X + 2, MAX_Y + 2, 256);
+	fillRectangle(MIN_X, MIN_Y, MAX_X - 2, MAX_Y - 2, 0);
 }
