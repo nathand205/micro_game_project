@@ -8,6 +8,7 @@
 #define MAX_X 110
 
 
+void initSound(void);
 void initClock(void);
 void initSysTick(void);
 void SysTick_Handler(void);
@@ -19,22 +20,6 @@ void pinMode(GPIO_TypeDef *Port, uint32_t BitNumber, uint32_t Mode);
 
 volatile uint32_t milliseconds;
 
-const uint16_t deco1[]=
-{
-0,0,0,0,4,4,4,4,4,0,0,0,0,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,65415,65415,65415,248,65415,0,0,0,0,0,0,0,65415,65415,65415,65415,65415,8068,0,0,0,0,0,0,65415,65415,65415,4096,4096,0,0,0,0,0,0,0,0,65415,65415,65415,0,0,0,0,0,0,0,0,0,7936,7936,7936,0,0,0,0,0,0,0,0,7936,7936,65535,7936,0,0,0,0,0,0,0,0,7936,7936,65535,7936,7936,7936,7936,0,0,0,0,0,7936,7936,65535,65535,65535,65535,7936,0,0,0,0,0,7936,7936,7936,7936,7936,7936,7936,0,0,0,0,0,7936,7936,7936,7936,0,0,0,0,0,0,0,0,0,7936,65535,7936,0,0,0,0,0,0,0,0,0,7936,65535,7936,0,0,0,0,0,0,0,0,0,7936,65535,7936,0,0,0,0,0,0,0,0,0,7940,7940,7940,7940,0,0,0,
-};
-const uint16_t deco2[]= 
-	{
-0,0,0,0,0,4,4,4,4,4,0,0,0,0,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,65415,65415,65415,248,65415,0,0,0,0,0,0,0,65415,65415,65415,65415,65415,8068,0,0,0,0,0,0,65415,65415,65415,4096,4096,0,0,0,0,0,0,0,0,65415,65415,65415,0,0,0,0,0,0,0,0,7936,7936,7936,0,0,0,0,0,0,0,0,7936,7936,65535,7936,0,0,0,0,0,0,0,0,7936,7936,65535,7936,7936,7936,7936,0,0,0,0,0,7936,7936,65535,65535,65535,65535,7936,0,0,0,0,0,7936,7936,7936,7936,7936,7936,7936,0,0,0,0,0,7936,7936,7936,7936,0,0,0,0,0,0,0,0,0,40224,7936,65535,7936,0,0,0,0,0,0,0,40224,40224,7936,65535,7936,0,0,0,0,0,0,65315,40224,40224,7936,65535,40224,0,0,0,0,0,0,0,65315,0,65315,65315,65315,65315,0,0,
-	};
-const uint16_t deco3[]= 
-{
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,4,4,0,0,0,0,0,0,0,0,0,4,4,4,4,0,0,0,0,0,0,0,4,4,4,4,4,4,0,0,0,0,7936,7936,4,4,4,4,4,4,7936,7936,0,0,65535,65535,4,4,4,4,4,4,65535,65535,0,0,7936,7936,4,4,4,4,4,4,7936,7936,0,0,0,0,0,4,4,4,4,0,0,0,0,0,0,0,0,0,24327,24327,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-};
-const uint16_t dg1[]=
-{
-	0,0,16142,16142,16142,16142,16142,16142,16142,16142,0,0,0,0,0,16142,16142,16142,16142,16142,16142,0,0,0,0,0,16142,16142,16142,16142,16142,16142,16142,16142,0,0,0,0,16142,16142,16142,1994,1994,16142,16142,16142,0,0,0,0,16142,16142,16142,1994,16142,1994,16142,16142,0,0,0,0,16142,16142,16142,1994,16142,1994,16142,16142,0,0,0,0,16142,16142,16142,1994,16142,1994,16142,16142,0,0,0,0,16142,16142,16142,1994,1994,16142,16142,16142,0,0,0,0,16142,16142,16142,16142,16142,16142,16142,16142,0,0,0,0,16142,16142,16142,1994,1994,1994,16142,16142,0,0,0,0,16142,16142,16142,1994,16142,16142,16142,16142,0,0,0,0,16142,16142,16142,1994,16142,16142,16142,16142,0,0,0,0,16142,16142,16142,1994,16142,1994,16142,16142,0,0,0,0,16142,16142,16142,1994,1994,1994,16142,16142,0,0,0,0,0,16142,16142,16142,16142,16142,16142,0,0,0,0,0,0,16142,16142,16142,16142,16142,16142,0,0,0,
-};
 
 const uint16_t snake[]=
 {
@@ -43,35 +28,67 @@ const uint16_t snake[]=
 
 void move(int direction);
 void updateBody();
+void checkforCollision1(int);
+
+void mainMenu();
+void creditScroll();
 
 int x = 50;
 int y = 50;
 int snakeBody[3][MAX_SIZE] = {0};
 int applesEaten = 1;
 void drawBorder();
+void sneyk1P();
+void playNote(uint32_t freq);
 
 int main()
 {
-	
-
-	int hinverted = 0;
-	int vinverted = 0;
-	int toggle = 0;
-	int hmoved = 0;
-	int vmoved = 0;
-
-	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
-	short currentCycle = 1;
-
-	uint16_t x = MIN_X;
-	uint16_t y = MAX_Y - 8;
-	uint16_t oldx = x;
-	uint16_t oldy = y;
-	
 	initClock();
 	initSysTick();
 	setupIO();
-	putImage(20,80,12,16,dg1,0,0);
+
+	
+
+	mainMenu();
+	
+	return 0;
+}
+
+void playNote(uint32_t freq)
+{
+// Counter is running at 4MHz 
+// Lowest possible frequency = 4000000/65536 = 61 Hz approx
+    if (freq == 0)
+    {
+        TIM2->CR1 &= ~(1 << 0); // disable the counter
+    }
+	TIM2->ARR = (uint32_t)4000000/((uint32_t)freq); 
+	TIM2->CCR4= TIM2->ARR/2;	
+	TIM2->CNT = 0; // set the count to zero initially
+	TIM2->CR1 |= (1 << 0); // and enable the counter
+}
+
+void initSound()
+{    
+// Sound will be produced by sending the output from Timer 2, channel 4 out PB1
+    pinMode(GPIOB,1,2); // select alternative function for PB1
+    GPIOB->AFR[0] &= ~( (0b1111) << 1*4); // zero out alternate function bits
+    GPIOB->AFR[0] |= ( (0b0101) << 1*4); // set required alternate function bits (AF5)
+    
+    RCC->APB1ENR |= (1 << 0);  // enable Timer 2
+    TIM2->CR1 = 0; // Set Timer 2 to default values
+	TIM2->CCMR2 = (1 << 14) + (1 << 13);
+	TIM2->CCER |= (1 << 12);
+	TIM2->PSC = 3;
+	TIM2->ARR = 1UL;
+	TIM2->CCR4 = TIM2->ARR/2;	
+	TIM2->CNT = 0;
+}
+
+void sneyk1P()
+{
+	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
+	short currentCycle = 1;
 
 	drawBorder();
 	printTextX2("SCORE:", 0, 0, RGBToWord(0xff,0xff,0), 0);
@@ -87,19 +104,31 @@ int main()
 		
 		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 		{			
-			p1Direction = 0;		
+			if (p1Direction != 2)
+			{
+				p1Direction = 0;	
+			}	
 		}
 		if ((GPIOB->IDR & (1 << 5)) == 0) // left pressed
 		{			
-			p1Direction = 2;
+			if (p1Direction != 0)
+			{
+				p1Direction = 2;	
+			}			
 		}
 		if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
 		{
-			p1Direction = 1;
+			if (p1Direction != 3)
+			{
+				p1Direction = 1;	
+			}	
 		}
 		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
 		{
-			p1Direction = 3;
+			if (p1Direction != 1)
+			{
+				p1Direction = 3;	
+			}	
 		}
 		
 		if(currentCycle == 8)
@@ -115,8 +144,124 @@ int main()
 
 		delay(50);
 	}
-	return 0;
 }
+
+void creditScroll()
+{
+	
+	fillRectangle(0,0,128,154,0);
+
+	for (int i = 140; i >= 0; i--)
+	{
+		printTextX2("DORIAN", 10, i, RGBToWord(0, 50, 255), 0);
+		printTextX2("          ", 10, i + 14, 0, 0);
+		printTextX2("DZIGUMOVIC", 10, i + 28, RGBToWord(0, 50, 255), 0);
+		printTextX2("          ", 10, i + 42, 0, 0);
+		printTextX2("KENTON", 10, i + 56, RGBToWord(0, 255, 0), 0);
+		printTextX2("          ", 10, i + 70, 0, 0);
+		printTextX2("KAMTCHOU", 10, i + 84, RGBToWord(0, 255, 0), 0);
+		printTextX2("          ", 10, i + 98, 0, 0);
+		if (i < 48)
+		{
+			printTextX2("NATHAN", 10, i + 112, RGBToWord(255, 0, 0), 0);
+			printTextX2("          ", 10, i + 126, 0, 0);
+			printTextX2("DANIEL", 10, i + 140, RGBToWord(255, 0, 0), 0);
+			printTextX2("          ", 10, i + 154, 0, 0);
+
+		}
+		delay(15);
+	}
+
+	delay(3000);
+	fillRectangle(0,0,128,154,0);
+	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+}
+
+void mainMenu()
+{
+	int currentSelection = 0;
+	fillRectangle(0,0,128,154,0);
+	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+	
+
+	while(1)
+	{
+
+		if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
+		{
+			if(currentSelection == 2)
+			{
+				currentSelection = 0;
+			}
+			else
+			{
+				currentSelection++;
+			}
+
+			delay(200);
+		}
+		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
+		{
+			if(currentSelection == 0)
+			{
+				currentSelection = 2;
+			}
+			else
+			{
+				currentSelection--;
+			}
+
+			delay(200);
+		}
+
+		switch(currentSelection)
+		{
+			case 0:
+			{
+				printTextX2("1 PLAYER >", 10, 40, 255, 0);
+				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
+
+				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+				{
+					playNote(500);			
+					sneyk1P();	
+				}
+
+
+				break;
+			}
+
+			case 1:
+			{
+				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("2 PLAYER >", 10, 70, 255, 0);
+				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
+				break;
+			}
+
+			case 2:
+			{
+				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("CREDITS >", 10, 100, 255, 0);
+				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+				{		
+					playNote(500);	
+					creditScroll();	
+				}
+				
+				break;
+			}
+		}
+		
+	}
+
+}
+
+
 void initSysTick(void)
 {
 	SysTick->LOAD = 48000;
@@ -258,25 +403,25 @@ void move(int direction)
 
 void updateBody()
 {
-	short i = 0;
+	short endOfSnake = 0;
 
 	// find end of snake (first 0 element)
-	while( snakeBody[0][i] != 0)
+	while( snakeBody[0][endOfSnake] != 0)
 	{
-		i++;
+		endOfSnake++;
 	}
-	i--;
+	endOfSnake--;
 
 	// delete trailing body piece
-	if (snakeBody[1][i] != 0)
+	if (snakeBody[1][endOfSnake] != 0)
 	{
-		fillRectangle(snakeBody[1][i],snakeBody[2][i],8,8,0);
+		fillRectangle(snakeBody[1][endOfSnake],snakeBody[2][endOfSnake],8,8,0);
 	}
 	
 
 
 	// propagate movement from back to front -- keep track of where body pieces are
-	for (int j = i; j > 0; j--)
+	for (int j = endOfSnake; j > 0; j--)
 	{
 		snakeBody[1][j] = snakeBody[1][j-1];
 		snakeBody[2][j] = snakeBody[2][j-1];
@@ -284,11 +429,38 @@ void updateBody()
 
 	snakeBody[1][0] = x;
 	snakeBody[2][0] = y;
+
+	checkforCollision1(endOfSnake);
 	
+}
+
+void checkforCollision1(int lastFilled)
+{
+	
+	for (int i = 1; i <= lastFilled; i++)
+	{
+		if (x == snakeBody[1][i])
+		{
+			if(y == snakeBody[2][i])
+			{
+				for (int j = 0; j <= lastFilled; j++)
+				{
+					fillRectangle(snakeBody[1][j], snakeBody[2][j], 8, 8, 255);
+				}
+
+				break;
+			}
+		}
+	}
+
+	
+
+
 }
 
 void drawBorder()
 {
-	fillRectangle(MIN_X - 2, MIN_Y - 2, MAX_X + 2, MAX_Y + 2, 256);
+	
+	fillRectangle(0,0,128,154,RGBToWord(255,8,0));
 	fillRectangle(MIN_X, MIN_Y, MAX_X - 2, MAX_Y - 2, 0);
 }
