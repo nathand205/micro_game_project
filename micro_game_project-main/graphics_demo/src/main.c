@@ -358,6 +358,8 @@ void updateBody()
 		endofSnake1++;
 	}
 	endofSnake1--;
+	printNumber((endOfSnake-3), 80, 0, RGBToWord(0xff, 0xff, 0), 0);// score count printer. I did endOfSnake-3 because the snake starts at legth 3
+
 
 	// delete trailing body piece
 	// do not write if x = 0... i.e. if x has yet to be assigned... snake not fully in yet
