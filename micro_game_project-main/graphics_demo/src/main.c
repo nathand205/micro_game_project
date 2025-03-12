@@ -1,6 +1,5 @@
 #include <stm32f031x6.h>
 #include <stdlib.h>
-#include <time.h>
 #include "display.h"
 
 #define MAX_SIZE 30
@@ -28,6 +27,16 @@ const uint16_t snake[]=
 	40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,
 };
 
+const uint16_t snakehead2H[]=
+{
+	40725,40725,40725,40725,65535,65535,0,0,40725,40725,40725,40725,65535,65535,0,0,40725,40725,40725,40725,65535,65535,65535,65535,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,65535,65535,65535,65535,40725,40725,40725,40725,65535,65535,0,0,40725,40725,40725,40725,65535,65535,0,0,
+};
+
+const uint16_t snakehead2V[]=
+{
+0,0,65535,40725,40725,65535,0,0,0,0,65535,40725,40725,65535,0,0,65535,65535,65535,40725,40725,65535,65535,65535,65535,65535,65535,40725,40725,65535,65535,65535,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,40725,
+};
+
 const uint16_t snakeheadH[]=
 {
 	22,22,22,22,65535,65535,0,0,22,22,22,22,65535,65535,0,0,22,22,22,22,65535,65535,65535,65535,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,65535,65535,65535,65535,22,22,22,22,65535,65535,0,0,22,22,22,22,65535,65535,0,0,
@@ -44,15 +53,23 @@ const uint16_t apple[]=
 };
 
 void move(int direction);
-void updateBody();
+void move2(int direction);
+
+void updateBody1();
+void updateBody2();
+
 void checkforCollision1(int);
+void checkforCollision2(int);
 
 void mainMenu();
 void creditScroll();
 
 int x = 50;
 int y = 50;
+int x2 = 40;
+int y2 = 120;
 int snakeBody1[3][MAX_SIZE] = {0};
+int snakeBody2[3][MAX_SIZE] = {0};
 int applesEaten = 1;
 
 short appleX = 0;
@@ -113,7 +130,6 @@ void sneyk1P()
 {
 	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
 	short currentCycle = 1;
-	short appleCycle = 1;
 
 	drawBorder();
 	printTextX2("SCORE:", 0, 0, RGBToWord(0xff,0xff,0), 0);
@@ -172,12 +188,80 @@ void sneyk1P()
 	}
 }
 
+void sneyk2P()
+{
+	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
+	short currentCycle = 1;
+
+	drawBorder();
+	printTextX2("SCORE:", 0, 0, RGBToWord(0xff,0xff,0), 0);
+
+	snakeBody1[0][0] = 1; //place head
+	snakeBody1[0][1] = 1;
+	snakeBody1[0][2] = 1;
+	snakeBody2[0][0] = 1; //place head
+	snakeBody2[0][1] = 1;
+	snakeBody2[0][2] = 1;
+
+	spawnApple();
+
+	while(1)
+	{
+		
+		
+		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+		{			
+			if (p1Direction != 2)
+			{
+				p1Direction = 0;	
+			}	
+		}
+		if ((GPIOB->IDR & (1 << 5)) == 0) // left pressed
+		{			
+			if (p1Direction != 0)
+			{
+				p1Direction = 2;	
+			}			
+		}
+		if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
+		{
+			if (p1Direction != 3)
+			{
+				p1Direction = 1;	
+			}	
+		}
+		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
+		{
+			if (p1Direction != 1)
+			{
+				p1Direction = 3;	
+			}	
+		}
+		
+		if(currentCycle == 8)
+		{	
+			move2(p1Direction);		
+			move(p1Direction);
+
+			currentCycle = 1;
+		}
+		else
+		{
+			currentCycle++;
+		}
+
+		delay(50);
+	}
+}
+
+
+
 void creditScroll()
 {
 	
 	fillRectangle(0,0,128,154,0);
 
-	for (int i = 140; i >= 0; i--)
+	for (int i = 140; i >= 1; i--)
 	{
 		printTextX2("DORIAN", 10, i, RGBToWord(0, 50, 255), 0);
 		printTextX2("          ", 10, i + 14, 0, 0);
@@ -265,6 +349,13 @@ void mainMenu()
 				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("2 PLAYER >", 10, 70, 255, 0);
 				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
+				
+				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+				{
+					playNote(500);			
+					sneyk2P();	
+				}
+
 				break;
 			}
 
@@ -336,7 +427,7 @@ void move(int direction)
 	}
 	// draw head	
 
-	updateBody();
+	updateBody1();
 
 	//remove duplicate head
 	if(snakeBody1[1][1] != 0)
@@ -348,7 +439,66 @@ void move(int direction)
 	
 }
 
-void updateBody()
+void move2(int direction)
+{
+	
+
+	switch(direction)
+	{
+		case 0: // right
+		{
+			if (x2 < MAX_X)
+			{
+				x2 = x2 + 10;
+				putImage(x2,y2,8,8,snakehead2H,0,0);
+			}
+			break;
+		}
+
+		case 1: // down
+		{
+			if (y2 < MAX_Y)
+			{
+				y2 = y2 + 10;
+				putImage(x2,y2,8,8,snakehead2V,0,1);
+			}
+			break;
+		}
+
+		case 2: // left
+		{
+			if (x2 > MIN_X)
+			{
+				x2 = x2 - 10;
+				putImage(x2,y2,8,8,snakehead2H,1,0);
+			}
+			break;
+		}
+
+		case 3: // up
+		{
+			if (y2 > MIN_Y)
+			{
+				y2 = y2 - 10;
+				putImage(x2,y2,8,8,snakehead2V,0,0);
+			}
+			break;
+		}
+	}
+
+	updateBody2();
+
+	//remove duplicate head
+	if(snakeBody2[1][1] != 0)
+	{
+		fillRectangle(snakeBody2[1][1], snakeBody2[2][1], 8, 8, RGBToWord(255,180,21));
+	}
+
+	
+	
+}
+
+void updateBody1()
 {
 	short endofSnake1 = 0;
 
@@ -358,7 +508,9 @@ void updateBody()
 		endofSnake1++;
 	}
 	endofSnake1--;
-	printNumber((endOfSnake-3), 80, 0, RGBToWord(0xff, 0xff, 0), 0);// score count printer. I did endOfSnake-3 because the snake starts at legth 3
+
+	// score count printer
+	printNumber((endofSnake1), 80, 0, RGBToWord(0xff, 0xff, 0), 0);
 
 
 	// delete trailing body piece
@@ -384,11 +536,94 @@ void updateBody()
 	
 }
 
+void updateBody2()
+{
+	short endofSnake2 = 0;
+
+	// find end of snake (first 0 element)
+	while( snakeBody2[0][endofSnake2] != 0)
+	{
+		endofSnake2++;
+	}
+	endofSnake2--;
+
+	// score count printer
+	printNumber((endofSnake2), 80, 0, RGBToWord(0xff, 0xff, 0), 0);
+
+
+	// delete trailing body piece
+	// do not write if x = 0... i.e. if x has yet to be assigned... snake not fully in yet
+	if (snakeBody2[1][endofSnake2] != 0)
+	{
+		fillRectangle(snakeBody2[1][endofSnake2],snakeBody2[2][endofSnake2],8,8,0);
+	}
+	
+
+
+	// propagate movement from back to front -- keep track of where body pieces are
+	for (int j = endofSnake2; j > 0; j--)
+	{
+		snakeBody2[1][j] = snakeBody2[1][j-1];
+		snakeBody2[2][j] = snakeBody2[2][j-1];
+	}
+
+	snakeBody2[1][0] = x2;
+	snakeBody2[2][0] = y2;
+
+	checkforCollision2(endofSnake2);
+	
+}
+
+void checkforCollision2(int endofSnake2)
+{
+	
+	for (int i = 1; i <= endofSnake2; i++)
+	{
+		// checks if this snake is hitting itself
+		if (x2 == snakeBody2[1][i])
+		{
+			if(y2 == snakeBody2[2][i])
+			{
+				for (int j = 0; j <= endofSnake2; j++)
+				{
+					fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+				}
+
+				break;
+			}
+		}
+
+		// checks if snake 1 is colliding with this snake
+		if (x == snakeBody2[1][i])
+		{
+			if(y == snakeBody2[2][i])
+			{
+				for (int j = 0; j <= endofSnake2; j++)
+				{
+					fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
+				}
+
+				break;
+			}
+		}
+	}
+	
+
+	// nom nom
+	if (x2 == appleX && y2 == appleY)
+	{
+		//eat the apple, get longer
+		snakeBody2[0][endofSnake2 + 1] = 1;
+		spawnApple();
+	}
+
+}
 void checkforCollision1(int endofSnake1)
 {
 	
 	for (int i = 1; i <= endofSnake1; i++)
 	{
+		// checks if this snake is colliding with itself
 		if (x == snakeBody1[1][i])
 		{
 			if(y == snakeBody1[2][i])
@@ -403,6 +638,28 @@ void checkforCollision1(int endofSnake1)
 		}
 	}
 
+	//checks if snake 2 exists
+	if(snakeBody2[0][0] != 0)
+	{
+		for (int i = 1; i <= endofSnake1; i++)
+		{
+			//checks if snake 2 is colliding with this snake
+
+			if (x2 == snakeBody1[1][i])
+			{
+				if(y2 == snakeBody1[2][i])
+				{
+					for (int j = 0; j <= endofSnake1; j++)
+					{
+						fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+					}
+
+					break;
+				}
+			}
+		}
+	}
+
 	// nom nom
 	if (x == appleX && y == appleY)
 	{
@@ -411,10 +668,8 @@ void checkforCollision1(int endofSnake1)
 		spawnApple();
 	}
 
-	
-
-
 }
+
 
 void drawBorder()
 {
