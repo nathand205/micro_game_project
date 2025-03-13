@@ -70,7 +70,9 @@ int x2 = 40;
 int y2 = 120;
 int snakeBody1[3][MAX_SIZE] = {0};
 int snakeBody2[3][MAX_SIZE] = {0};
-int applesEaten = 1;
+
+short gameOverVar = 0;
+short currentCycle = 1;
 
 short appleX = 0;
 short appleY = 0;
@@ -80,29 +82,145 @@ void drawBorder();
 void sneyk1P();
 void sneyk2P();
 void spawnApple();
+void gameOver(short);
+void gameOver2(short);
+void orangeOn(void);
+void orangeOff(void);
+void greenOn(void);
+void greenOff(void);
 
 int main()
 {
-	
 	initClock();
 	initSysTick();
 	setupIO();
 	initSound();
+	pinMode(GPIOA,1,1); // Make GPIOA bit 1 an output
+	pinMode(GPIOA,0,1); // Make GPIOA bit 2 an output
 	
 	mainMenu();
 	
 	return 0;
 }
 
+void gameOver(short end1)
+{
+    currentCycle = 1;
+    gameOverVar = 1;
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
+    }
 
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    fillRectangle(0, 0, 128, 186, 0);
+
+    for (int i = 100; i >= 0; i-=10)
+    {
+        fillRectangle(0, 40, 128, 30, 0);
+        printTextX2(" GAME OVER ", i, 50, RGBToWord(255, 255, 255), 0);
+        delay(200);
+    }
+
+	playNote(220);
+    delay(800);
+	playNote(150);
+	delay(1200);
+	playNote(0);
+
+}
+
+void gameOver2(short end1)
+{
+    currentCycle = 1;
+    gameOverVar = 1;
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    fillRectangle(0, 0, 128, 186, 0);
+
+    for (int i = 100; i >= 0; i-=10)
+    {
+        fillRectangle(0, 40, 128, 30, 0);
+        printTextX2(" GAME OVER ", i, 50, RGBToWord(255, 255, 255), 0);
+        delay(200);
+    }
+
+    playNote(220);
+    delay(800);
+	playNote(150);
+	delay(1200);
+	playNote(0);
+
+}
+
+void orangeOn()
+{
+    GPIOA->ODR |= (1 << 1);
+}
+void orangeOff()
+{
+    GPIOA->ODR &= ~(1 << 1);
+}
+
+void greenOn()
+{
+    GPIOA->ODR |= (1 << 0);
+}
+void greenOff()
+{
+    GPIOA->ODR &= ~(1 << 0);
+}
 
 void sneyk1P()
 {
 	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
-	short currentCycle = 1;
+	currentCycle = 1;
 
 	drawBorder();
-	printTextX2("SCORE:", 0, 0, RGBToWord(0xff,0xff,0), 0);
 
 	snakeBody1[0][0] = 1; //place head
 	snakeBody1[0][1] = 1;
@@ -110,9 +228,21 @@ void sneyk1P()
 
 	spawnApple();
 
-	while(1)
+	while(gameOverVar == 0)
 	{
-		
+		if(gameOverVar == 1)
+        {
+            gameOverVar = 0;
+            x = 50;
+            y = 50;
+            fillRectangle(0,0,128,154,0);
+            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+            for(int k = 3; k < MAX_SIZE; k++)
+            {
+                snakeBody1[0][k] = 0;
+            }
+        }
 		
 		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 		{			
@@ -154,6 +284,22 @@ void sneyk1P()
 			currentCycle++;
 		}
 
+		//play sound for 2 cycles when eat apple
+		if (appleEaten == 3)
+		{
+			playNote(0);
+			appleEaten = 0;
+		}
+		else if (appleEaten == 2)
+		{
+			appleEaten++;
+		}
+		else if (appleEaten == 1)
+		{
+			playNote(800);
+			appleEaten = 2;
+		}
+
 		delay(50);
 	}
 }
@@ -161,10 +307,9 @@ void sneyk1P()
 void sneyk2P()
 {
 	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
-	short currentCycle = 1;
+	currentCycle = 1;
 
 	drawBorder();
-	printTextX2("SCORE:", 0, 0, RGBToWord(0xff,0xff,0), 0);
 
 	snakeBody1[0][0] = 1; //place head
 	snakeBody1[0][1] = 1;
@@ -175,7 +320,7 @@ void sneyk2P()
 
 	spawnApple();
 
-	while(1)
+	while(gameOverVar == 0)
 	{
 		
 		
@@ -220,18 +365,23 @@ void sneyk2P()
 			currentCycle++;
 		}
 
-		delay(50);
-
-		if (appleEaten == 2)
+		//play sound for 2 cycles when eat apple
+		if (appleEaten == 3)
 		{
 			playNote(0);
 			appleEaten = 0;
+		}
+		else if (appleEaten == 2)
+		{
+			appleEaten++;
 		}
 		else if (appleEaten == 1)
 		{
 			playNote(800);
 			appleEaten = 2;
 		}
+		
+		delay(50);
 	}
 }
 
@@ -279,6 +429,22 @@ void mainMenu()
 
 	while(1)
 	{
+		if(gameOverVar == 1)
+        {
+            gameOverVar = 0;
+            x = 50;
+            y = 50;
+			x2 = 40;
+			y2 = 120;
+            fillRectangle(0,0,128,154,0);
+            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+            for(int k = 3; k < MAX_SIZE; k++)
+            {
+                snakeBody1[0][k] = 0;
+				snakeBody2[0][k] = 0;
+            }
+        }
 
 		if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
 		{
@@ -501,7 +667,7 @@ void updateBody1()
 	endofSnake1--;
 
 	// score count printer
-	printNumber((endofSnake1), 80, 0, RGBToWord(0xff, 0xff, 0), 0);
+	printNumber((endofSnake1), 10, 5, RGBToWord(0xff, 0xff, 0), 0);
 
 
 	// delete trailing body piece
@@ -539,7 +705,7 @@ void updateBody2()
 	endofSnake2--;
 
 	// score count printer
-	printNumber((endofSnake2), 80, 0, RGBToWord(0xff, 0xff, 0), 0);
+	printNumber((endofSnake2), 80, 5, RGBToWord(0xff, 0xff, 0), 0);
 
 
 	// delete trailing body piece
@@ -567,7 +733,15 @@ void updateBody2()
 
 void checkforCollision2(int endofSnake2)
 {
-	
+	short endofSnake1 = 0;
+
+	// find end of snake (first 0 element)
+	while( snakeBody1[0][endofSnake1] != 0)
+	{
+		endofSnake1++;
+	}
+	endofSnake1--;
+
 	for (int i = 1; i <= endofSnake2; i++)
 	{
 		// checks if this snake is hitting itself
@@ -579,7 +753,7 @@ void checkforCollision2(int endofSnake2)
 				{
 					fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
 				}
-
+				gameOver2(endofSnake2);
 				break;
 			}
 		}
@@ -593,7 +767,7 @@ void checkforCollision2(int endofSnake2)
 				{
 					fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
 				}
-
+				gameOver(endofSnake1);
 				break;
 			}
 		}
@@ -612,7 +786,15 @@ void checkforCollision2(int endofSnake2)
 }
 void checkforCollision1(int endofSnake1)
 {
-	
+	short endofSnake2 = 0;
+
+	// find end of snake (first 0 element)
+	while( snakeBody2[0][endofSnake2] != 0)
+	{
+		endofSnake2++;
+	}
+	endofSnake2--;
+
 	for (int i = 1; i <= endofSnake1; i++)
 	{
 		// checks if this snake is colliding with itself
@@ -625,6 +807,7 @@ void checkforCollision1(int endofSnake1)
 					fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
 				}
 
+				gameOver(endofSnake1);
 				break;
 			}
 		}
@@ -645,7 +828,7 @@ void checkforCollision1(int endofSnake1)
 					{
 						fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
 					}
-
+					gameOver2(endofSnake2);
 					break;
 				}
 			}
