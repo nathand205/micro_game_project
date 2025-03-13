@@ -1,7 +1,7 @@
 #include <stm32f031x6.h>
 #include <stdlib.h>
 #include "display.h"
-
+#include "sound.h"
 #define MAX_SIZE 30
 #define MIN_Y 20
 #define MAX_Y 131
@@ -9,7 +9,6 @@
 #define MAX_X 110
 
 
-void initSound(void);
 void initClock(void);
 void initSysTick(void);
 void SysTick_Handler(void);
@@ -21,7 +20,7 @@ void pinMode(GPIO_TypeDef *Port, uint32_t BitNumber, uint32_t Mode);
 
 volatile uint32_t milliseconds;
 
-
+// images
 const uint16_t snake[]=
 {
 	40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,40224,
@@ -49,8 +48,9 @@ const uint16_t snakeheadV[]=
 
 const uint16_t apple[]=
 {
-	0,0,0,0,0,43008,0,0,0,41236,24579,0,43008,0,0,0,0,0,49973,40979,3410,39680,0,0,0,23841,65329,7985,55849,56922,48152,0,0,7482,39985,15409,23601,40754,64561,0,0,7482,39985,15409,15409,64561,15409,0,0,23841,16170,64561,23601,15409,7193,0,0,0,23874,64561,31017,7193,0,0,
+0,0,0,0,0,43008,0,0,0,41236,24579,0,43008,0,0,0,0,0,49973,40979,3410,39680,0,0,0,23841,65329,7985,55849,56922,48152,0,0,7482,39985,15409,23601,40754,64561,0,0,7482,39985,15409,15409,64561,15409,0,0,23841,16170,64561,23601,15409,7193,0,0,0,23874,64561,31017,7193,0,0,
 };
+
 
 void move(int direction);
 void move2(int direction);
@@ -74,57 +74,27 @@ int applesEaten = 1;
 
 short appleX = 0;
 short appleY = 0;
+uint8_t appleEaten = 0;
 
 void drawBorder();
 void sneyk1P();
 void sneyk2P();
-void playNote(uint32_t freq);
-
 void spawnApple();
 
 int main()
 {
+	
 	initClock();
 	initSysTick();
 	setupIO();
+	initSound();
 	
-
-
 	mainMenu();
 	
 	return 0;
 }
 
-void playNote(uint32_t freq)
-{
-// Counter is running at 4MHz 
-// Lowest possible frequency = 4000000/65536 = 61 Hz approx
-    if (freq == 0)
-    {
-        TIM2->CR1 &= ~(1 << 0); // disable the counter
-    }
-	TIM2->ARR = (uint32_t)4000000/((uint32_t)freq); 
-	TIM2->CCR4= TIM2->ARR/2;	
-	TIM2->CNT = 0; // set the count to zero initially
-	TIM2->CR1 |= (1 << 0); // and enable the counter
-}
 
-void initSound()
-{    
-// Sound will be produced by sending the output from Timer 2, channel 4 out PB1
-    pinMode(GPIOB,1,2); // select alternative function for PB1
-    GPIOB->AFR[0] &= ~( (0b1111) << 1*4); // zero out alternate function bits
-    GPIOB->AFR[0] |= ( (0b0101) << 1*4); // set required alternate function bits (AF5)
-    
-    RCC->APB1ENR |= (1 << 0);  // enable Timer 2
-    TIM2->CR1 = 0; // Set Timer 2 to default values
-	TIM2->CCMR2 = (1 << 14) + (1 << 13);
-	TIM2->CCER |= (1 << 12);
-	TIM2->PSC = 3;
-	TIM2->ARR = 1UL;
-	TIM2->CCR4 = TIM2->ARR/2;	
-	TIM2->CNT = 0;
-}
 
 void sneyk1P()
 {
@@ -251,6 +221,17 @@ void sneyk2P()
 		}
 
 		delay(50);
+
+		if (appleEaten == 2)
+		{
+			playNote(0);
+			appleEaten = 0;
+		}
+		else if (appleEaten == 1)
+		{
+			playNote(800);
+			appleEaten = 2;
+		}
 	}
 }
 
@@ -309,8 +290,10 @@ void mainMenu()
 			{
 				currentSelection++;
 			}
-
-			delay(200);
+			playNote(200);
+			delay(50);
+			playNote(0);
+			delay(100);
 		}
 		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
 		{
@@ -322,8 +305,10 @@ void mainMenu()
 			{
 				currentSelection--;
 			}
-
-			delay(200);
+			playNote(200);
+			delay(50);
+			playNote(0);
+			delay(100);
 		}
 
 		switch(currentSelection)
@@ -336,7 +321,9 @@ void mainMenu()
 
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{
-					playNote(500);			
+					playNote(700);
+					delay(80);
+					playNote(0);			
 					sneyk1P();	
 				}
 
@@ -351,8 +338,10 @@ void mainMenu()
 				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
 				
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
-				{
-					playNote(500);			
+				{	
+					playNote(700);
+					delay(80);
+					playNote(0);				
 					sneyk2P();	
 				}
 
@@ -365,8 +354,10 @@ void mainMenu()
 				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("CREDITS >", 10, 100, 255, 0);
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
-				{		
-					playNote(500);	
+				{	
+					playNote(700);
+					delay(80);
+					playNote(0);	
 					creditScroll();	
 				}
 				
@@ -614,6 +605,7 @@ void checkforCollision2(int endofSnake2)
 	{
 		//eat the apple, get longer
 		snakeBody2[0][endofSnake2 + 1] = 1;
+		appleEaten = 1;
 		spawnApple();
 	}
 
@@ -665,6 +657,7 @@ void checkforCollision1(int endofSnake1)
 	{
 		//eat the apple, get longer
 		snakeBody1[0][endofSnake1 + 1] = 1;
+		appleEaten = 1;
 		spawnApple();
 	}
 
@@ -688,21 +681,22 @@ void spawnApple()
 	
 	//x: 10 - 110
 	//y: 20 - 140
-
 	appleX = ((rand() % 11) + 1) * 10;
 	appleY = ((rand() % 13) + 2) * 10;
 
 
 	
 	//check if apple is trying to spawn inside snake
-	while(snakeBody1[0][i] != 0)
+	while(snakeBody1[0][i] != 0 || snakeBody2[0][i] != 0)
 	{
-		if (snakeBody1[1][i] == appleX && snakeBody1[2][i] == appleY)
+		if ((snakeBody1[1][i] == appleX && snakeBody1[2][i] == appleY) || (snakeBody2[1][i] == appleX && snakeBody2[2][i] == appleY))
 		{
 			i = -1;
 
 			srand(milliseconds * x * y);
-		
+
+			//x: 10 - 110
+			//y: 20 - 140
 			appleX = ((rand() % 11) + 1) * 10;
 			appleY = ((rand() % 13) + 2) * 10;
 		}
