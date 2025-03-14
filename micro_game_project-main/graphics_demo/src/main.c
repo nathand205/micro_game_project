@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "display.h"
 #include "sound.h"
+#include "serial.h"
 #define MAX_SIZE 30
 #define MIN_Y 20
 #define MAX_Y 131
@@ -64,10 +65,10 @@ void checkforCollision2(int);
 void mainMenu();
 void creditScroll();
 
-int x = 50;
-int y = 50;
-int x2 = 40;
-int y2 = 120;
+int x = 60;
+int y = 70;
+int x2 = 70;
+int y2 = 70;
 int snakeBody1[3][MAX_SIZE] = {0};
 int snakeBody2[3][MAX_SIZE] = {0};
 
@@ -94,12 +95,13 @@ int main()
 	initClock();
 	initSysTick();
 	setupIO();
-	initSound();
-	pinMode(GPIOA,1,1); // Make GPIOA bit 1 an output
-	pinMode(GPIOA,0,1); // Make GPIOA bit 2 an output
-	
+	// initSound();
+	// pinMode(GPIOA,1,1); // Make GPIOA bit 1 an output
+	// pinMode(GPIOA,0,1); // Make GPIOA bit 0 an output
+
+	initSerial();
+
 	mainMenu();
-	
 	return 0;
 }
 
@@ -234,15 +236,18 @@ void sneyk1P()
 	{
 		if(gameOverVar == 1)
         {
+			
             gameOverVar = 0;
-            x = 50;
-            y = 50;
+            x = 60;
+            y = 70;
             fillRectangle(0,0,128,154,0);
             printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
             printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
             for(int k = 3; k < MAX_SIZE; k++)
             {
                 snakeBody1[0][k] = 0;
+				snakeBody1[1][k] = 0;
+				snakeBody1[2][k] = 0;
             }
         }
 		
@@ -277,9 +282,19 @@ void sneyk1P()
 		
 		if(currentCycle == 8)
 		{
-			move(p1Direction);			
+			move(p1Direction);
+			if(gameOverVar == 0)
+			{
+				playNote(50);
+			}			
+			
 
 			currentCycle = 1;
+		}
+		else if (currentCycle == 1)
+		{
+			playNote(0);
+			currentCycle++;
 		}
 		else
 		{
@@ -308,8 +323,10 @@ void sneyk1P()
 
 void sneyk2P()
 {
-	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
+	short p1Direction = 2;
+	short p2Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
 	currentCycle = 1;
+	char p2Input = 's';
 	short endofSnake1 = 2;
 	short endofSnake2 = 2;
 
@@ -326,8 +343,29 @@ void sneyk2P()
 
 	while(gameOverVar == 0)
 	{
-		
-		
+		if(gameOverVar == 1)
+        {
+			
+            gameOverVar = 0;
+            x = 60;
+            y = 70;
+			x2 = 70;
+			y2 = 70;
+            fillRectangle(0,0,128,154,0);
+            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+            for(int k = 3; k < MAX_SIZE; k++)
+            {
+                snakeBody1[0][k] = 0;
+				snakeBody1[1][k] = 0;
+				snakeBody1[2][k] = 0;
+				snakeBody2[0][k] = 0;
+				snakeBody2[1][k] = 0;
+				snakeBody2[2][k] = 0;
+            }
+		}
+
+		//get p1 direction
 		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 		{			
 			if (p1Direction != 2)
@@ -335,21 +373,21 @@ void sneyk2P()
 				p1Direction = 0;	
 			}	
 		}
-		if ((GPIOB->IDR & (1 << 5)) == 0) // left pressed
+		else if ((GPIOB->IDR & (1 << 5)) == 0) // left pressed
 		{			
 			if (p1Direction != 0)
 			{
 				p1Direction = 2;	
 			}			
 		}
-		if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
+		else if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
 		{
 			if (p1Direction != 3)
 			{
 				p1Direction = 1;	
 			}	
 		}
-		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
+		else if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
 		{
 			if (p1Direction != 1)
 			{
@@ -357,9 +395,46 @@ void sneyk2P()
 			}	
 		}
 		
+		//get p2 direction
+		//p2Input = egetchar();
+		eputchar(p2Input);
+
+		switch(p2Input)
+		{
+			case 'w':
+			{
+				p2Direction = 3;
+				break;
+			}
+
+			case 'd':
+			{
+				p2Direction = 0;
+				break;
+			}
+
+			case 's':
+			{
+				p2Direction = 1;
+				break;
+			}
+
+			case 'a':
+			{
+				p2Direction = 2;
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+
+		}
+
 		if(currentCycle == 8)
 		{	
-			move2(p1Direction);		
+			move2(p2Direction);		
 			move(p1Direction);
 
 			currentCycle = 1;
@@ -516,6 +591,7 @@ void mainMenu()
 				printTextX2("1 PLAYER >", 10, 40, 255, 0);
 				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
+				eputchar('1');
 
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{
@@ -534,7 +610,7 @@ void mainMenu()
 				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("2 PLAYER >", 10, 70, 255, 0);
 				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
-				
+				eputchar('2');
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{	
 					playNote(700);
@@ -551,6 +627,7 @@ void mainMenu()
 				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("CREDITS >", 10, 100, 255, 0);
+				eputchar('3');
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{	
 					playNote(700);
@@ -566,7 +643,6 @@ void mainMenu()
 	}
 
 }
-
 
 void move(int direction)
 {
@@ -615,7 +691,10 @@ void move(int direction)
 		}
 	}
 	// draw head	
+	printDecimal(x);
+	printDecimal(y);
 
+	
 	updateBody1();
 
 	//remove duplicate head
@@ -699,7 +778,7 @@ void updateBody1()
 	endofSnake1--;
 
 	// score count printer
-	printNumber((endofSnake1), 10, 5, RGBToWord(0xff, 0xff, 0), 0);
+	printNumber((endofSnake1-2), 10, 5, RGBToWord(0xff, 0xff, 0), 0);
 
 
 	// delete trailing body piece
@@ -737,7 +816,7 @@ void updateBody2()
 	endofSnake2--;
 
 	// score count printer
-	printNumber((endofSnake2), 80, 5, RGBToWord(0xff, 0xff, 0), 0);
+	printNumber((endofSnake2-2), 80, 5, RGBToWord(0xff, 0xff, 0), 0);
 
 
 	// delete trailing body piece
@@ -877,7 +956,6 @@ void checkforCollision1(int endofSnake1)
 	}
 
 }
-
 
 void drawBorder()
 {
