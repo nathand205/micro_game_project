@@ -308,6 +308,8 @@ void sneyk2P()
 {
 	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
 	currentCycle = 1;
+	short endofSnake1 = 2;
+	short endofSnake2 = 2;
 
 	drawBorder();
 
@@ -380,12 +382,40 @@ void sneyk2P()
 			playNote(800);
 			appleEaten = 2;
 		}
+
+		// comparing lenghts of snake to activate LEDs to see which one is in the lead
+		while( snakeBody1[0][endofSnake1] != 0)
+		{
+			endofSnake1++;
+		}
+		endofSnake1--;
+
+		while( snakeBody2[0][endofSnake2] != 0)
+		{
+			endofSnake2++;
+		}
+		endofSnake2--;
+
+		//snake1 is green, snake2 is orange
+		if(endofSnake1 > endofSnake2)
+		{
+			orangeOff();
+			greenOn();
+		}
+		else if(endofSnake2 > endofSnake1)
+		{
+			greenOff();
+			orangeOn();
+		}
+		else
+		{
+			orangeOff();
+			greenOff();
+		}
 		
 		delay(50);
 	}
 }
-
-
 
 void creditScroll()
 {
