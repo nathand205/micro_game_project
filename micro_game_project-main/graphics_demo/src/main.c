@@ -217,6 +217,8 @@ void greenOff()
 
 void sneyk1P()
 {
+	greenOff();
+	orangeOff();
 	short p1Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
 	currentCycle = 1;
 
