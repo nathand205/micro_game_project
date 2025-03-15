@@ -1,5 +1,6 @@
 #include <stm32f031x6.h>
 #include <stdlib.h>
+#include <string.h>
 #include "display.h"
 #include "sound.h"
 #include "serial.h"
@@ -78,8 +79,9 @@ short currentCycle = 1;
 short appleX = 0;
 short appleY = 0;
 uint8_t appleEaten = 0;
+uint8_t is2Player = 0;
 
-uint16_t musicSequence[] = { 50,100,50,100,50,100,50,700 };
+uint16_t musicSequence[] = { 50, 200, 50, 150, 50, 200, 50, 30 };
 
 void drawBorder();
 void sneyk1P();
@@ -92,6 +94,8 @@ void orangeOff(void);
 void greenOn(void);
 void greenOff(void);
 
+void printBanner();
+
 int main()
 {
 	initClock();
@@ -102,15 +106,35 @@ int main()
 	pinMode(GPIOA,0,1); // Make GPIOA bit 0 an output
 
 	initSerial();
+
+	printBanner();
 	
 	mainMenu();
 	return 0;
+}
+
+void printBanner()
+{
+	eputs("\n");
+	eputs(" ,---.  ,--.  ,--.,------.,--.   ,--.,--. ,--. ");
+	eputs("\n");
+	eputs("'   .-' |  ,'.|  ||  .---' \\  `.'  / |  .'   / ");
+	eputs("\n");
+	eputs("`.  `-. |  |' '  ||  `--,   '.    /  |  .   '  ");
+	eputs("\n");
+	eputs(".-'    ||  | `   ||  `---.    |  |   |  |\\   \\ ");
+	eputs("\n");
+	eputs("`-----' `--'  `--'`------'    `--'   `--' '--' ");
+	eputs("\n");
+	
 }
 
 void gameOver(short end1)
 {
     currentCycle = 1;
     gameOverVar = 1;
+
+	//this chunk of code flashes the snake to highlight that it has died
     for (int j = 0; j <= end1; j++)
     {
         fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
@@ -139,8 +163,15 @@ void gameOver(short end1)
 
     fillRectangle(0, 0, 128, 186, 0);
 	
-	orangeOn();
-	greenOff();
+	
+
+	if(is2Player)
+	{
+		// green died, turn on orange LED to show orange (P2) has won
+		orangeOn();
+		greenOff();
+		printTextX2("P2 WINS", 25, 90, RGBToWord(255, 255, 255), 0);
+	}
 
     for (int i = 100; i >= 0; i-=10)
     {
@@ -149,11 +180,27 @@ void gameOver(short end1)
         delay(200);
     }
 
-	playNote(220);
-    delay(800);
-	playNote(150);
-	delay(1200);
-	playNote(0);
+	if(is2Player)
+	{
+		//triumphant note -- someone won
+		playNote(500);
+		delay(200);
+		playNote(700);
+		delay(200);
+		playNote(750);
+		delay(400);
+		playNote(0);
+		delay(1200);
+	}
+	else
+	{
+		//sad note -- only player lost
+		playNote(220);
+		delay(800);
+		playNote(150);
+		delay(1200);
+		playNote(0);
+	}
 
 }
 
@@ -161,6 +208,8 @@ void gameOver2(short end1)
 {
     currentCycle = 1;
     gameOverVar = 1;
+
+	//this chunk of code flashes the snake to highlight that it has died
     for (int j = 0; j <= end1; j++)
     {
         fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
@@ -186,11 +235,17 @@ void gameOver2(short end1)
     {
         fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
     }
-
+	
+	// orange died, turn on green LED to show green (P1) has won
 	orangeOff();
 	greenOn();
 
     fillRectangle(0, 0, 128, 186, 0);
+
+	if(is2Player)
+	{
+		printTextX2("P1 WINS", 25, 90, RGBToWord(255, 255, 255), 0);
+	}
 
     for (int i = 100; i >= 0; i-=10)
     {
@@ -199,11 +254,27 @@ void gameOver2(short end1)
         delay(200);
     }
 
-    playNote(220);
-    delay(800);
-	playNote(150);
-	delay(1200);
-	playNote(0);
+    if(is2Player)
+	{
+		//triumphant note -- someone won
+		playNote(500);
+		delay(200);
+		playNote(700);
+		delay(200);
+		playNote(750);
+		delay(400);
+		playNote(0);
+		delay(1200);
+	}
+	else
+	{
+		//sad note -- only player lost
+		playNote(220);
+		delay(800);
+		playNote(150);
+		delay(1200);
+		playNote(0);
+	}
 
 }
 
@@ -234,7 +305,7 @@ void sneyk1P()
 
 	drawBorder();
 
-	snakeBody1[0][0] = 1; //place head
+	snakeBody1[0][0] = 1; //fill head, 2 segments behind
 	snakeBody1[0][1] = 1;
 	snakeBody1[0][2] = 1;
 
@@ -242,23 +313,8 @@ void sneyk1P()
 
 	while(gameOverVar == 0)
 	{
-		if(gameOverVar == 1)
-        {
-			
-            gameOverVar = 0;
-            x = 60;
-            y = 70;
-            fillRectangle(0,0,128,154,0);
-            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
-            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-            for(int k = 3; k < MAX_SIZE; k++)
-            {
-                snakeBody1[0][k] = 0;
-				snakeBody1[1][k] = 0;
-				snakeBody1[2][k] = 0;
-            }
-        }
 		
+		//getting input from board
 		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 		{			
 			if (p1Direction != 2)
@@ -288,19 +344,21 @@ void sneyk1P()
 			}	
 		}
 		
+		//sneyk1P runs every 50ms, this makes snake move only every 400ms
 		if(currentCycle == 8)
 		{
 			move(p1Direction);
 			if(gameOverVar == 0)
 			{
+				//plays snake moving noise
 				playNote(50);
 			}			
 			
-
 			currentCycle = 1;
 		}
 		else if (currentCycle == 1)
 		{
+			//stops playing noise
 			playNote(0);
 			currentCycle++;
 		}
@@ -334,16 +392,19 @@ void sneyk2P()
 	short p1Direction = 2;
 	short p2Direction = 0; // 0 - R, 1 - D, 2 - L, 3 - U
 	currentCycle = 1;
-	char p2Input = 's';
+	char p2Input = '0';
 	short endofSnake1 = 2;
 	short endofSnake2 = 2;
 
+	is2Player = 1;
+
 	drawBorder();
 
-	snakeBody1[0][0] = 1; //place head
+	snakeBody1[0][0] = 1; //fill head, 2 segments behind
 	snakeBody1[0][1] = 1;
 	snakeBody1[0][2] = 1;
-	snakeBody2[0][0] = 1; //place head
+
+	snakeBody2[0][0] = 1; //fill head, 2 segments behind
 	snakeBody2[0][1] = 1;
 	snakeBody2[0][2] = 1;
 
@@ -351,32 +412,11 @@ void sneyk2P()
 
 	while(gameOverVar == 0)
 	{
-		if(gameOverVar == 1)
-        {
-			
-            gameOverVar = 0;
-			for(int k = 3; k < MAX_SIZE; k++)
-            {
-                snakeBody1[0][k] = 0;
-				snakeBody1[1][k] = 0;
-				snakeBody1[2][k] = 0;
-				snakeBody2[0][k] = 0;
-				snakeBody2[1][k] = 0;
-				snakeBody2[2][k] = 0;
-            }
-            x = 60;
-            y = 70;
-			x2 = 70;
-			y2 = 70;
-            fillRectangle(0,0,128,154,0);
-            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
-            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-            
-		}
-
-		//get p1 direction
+	
+		//getting input from board
 		if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
-		{			
+		{	
+			//if prevents snake from going 180* and eating itself immediately		
 			if (p1Direction != 2)
 			{
 				p1Direction = 0;	
@@ -404,33 +444,46 @@ void sneyk2P()
 			}	
 		}
 		
-		//get p2 direction
+		//get p2 input from serial
 		p2Input = egetchar();
-		eputchar(p2Input);
 
+		//serial input --> snake direction
 		switch(p2Input)
 		{
 			case 'w':
 			{
-				p2Direction = 3;
+				//if prevents snake from going 180* and eating itself immediately		
+				if (p2Direction != 1)
+				{
+					p2Direction = 3;	
+				}
 				break;
 			}
 
 			case 'd':
 			{
-				p2Direction = 0;
+				if (p2Direction != 2)
+				{
+					p2Direction = 0;	
+				}
 				break;
 			}
 
 			case 's':
 			{
-				p2Direction = 1;
+				if (p2Direction != 3)
+				{
+					p2Direction = 1;	
+				}
 				break;
 			}
 
 			case 'a':
 			{
-				p2Direction = 2;
+				if (p2Direction != 0)
+				{
+					p2Direction = 2;	
+				}
 				break;
 			}
 
@@ -441,12 +494,25 @@ void sneyk2P()
 
 		}
 
+		//sneyk2P runs every 50ms, this makes snakes move only every 400ms
 		if(currentCycle == 8)
 		{	
 			move2(p2Direction);		
 			move(p1Direction);
+			if(gameOverVar == 0)
+			{
+				//plays snake moving noise
+				playNote(50);
+			}	
 
 			currentCycle = 1;
+		}
+		else if (currentCycle == 1)
+		{
+			currentCycle++;
+			
+			//stops playing noise
+			playNote(0);
 		}
 		else
 		{
@@ -469,7 +535,7 @@ void sneyk2P()
 			appleEaten = 2;
 		}
 
-		// comparing lenghts of snake to activate LEDs to see which one is in the lead
+		// comparing lenghts of snake to activate LEDs to show which one is in the lead
 		while( snakeBody1[0][endofSnake1] != 0)
 		{
 			endofSnake1++;
@@ -495,6 +561,7 @@ void sneyk2P()
 		}
 		else
 		{
+			// if they are equal, neither light is on
 			orangeOff();
 			greenOff();
 		}
@@ -508,6 +575,7 @@ void creditScroll()
 	
 	fillRectangle(0,0,128,154,0);
 
+	// prints over and over at different y to 'scroll'
 	for (int i = 140; i >= 1; i--)
 	{
 		printTextX2("DORIAN", 10, i, RGBToWord(0, 50, 255), 0);
@@ -530,7 +598,7 @@ void creditScroll()
 	}
 
 	delay(3000);
-	fillRectangle(0,0,128,154,0);
+	fillRectangle(0,0,128,156,0);
 	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
 	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
 }
@@ -551,18 +619,25 @@ void mainMenu()
 	{
 		if(gameOverVar == 1)
         {
-            gameOverVar = 0;
             x = 60;
             y = 70;
 			x2 = 70;
 			y2 = 70;
+			is2Player = 0;
             fillRectangle(0,0,128,154,0);
             printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
             printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-            for(int k = 3; k < MAX_SIZE; k++)
+            gameOverVar = 0;
+			for(int k = 0; k < MAX_SIZE; k++)
             {
+				//fill arrays with 0
                 snakeBody1[0][k] = 0;
+				snakeBody1[1][k] = 0;
+				snakeBody1[2][k] = 0;
+
 				snakeBody2[0][k] = 0;
+				snakeBody2[1][k] = 0;
+				snakeBody2[2][k] = 0;
             }
         }
 		if(milliseconds - currentTime > 150)
@@ -593,13 +668,13 @@ void mainMenu()
 			}
 		}
 		
-		if(milliseconds - musicTime > 400)
+		if(milliseconds - musicTime > 200)
 		{
 			playNote(0);
 			musicTime = milliseconds;
 			musicToggle = 0;
 		}
-		else if(milliseconds - musicTime > 330)
+		else if(milliseconds - musicTime > 130)
 		{
 			if (musicToggle == 0)
 			{
@@ -686,6 +761,7 @@ void move(int direction)
 			if (x < MAX_X)
 			{
 				x = x + 10;
+				// draw head
 				putImage(x,y,8,8,snakeheadH,0,0);
 			}
 			break;
@@ -696,6 +772,7 @@ void move(int direction)
 			if (y < MAX_Y)
 			{
 				y = y + 10;
+				// draw head
 				putImage(x,y,8,8,snakeheadV,0,1);
 			}
 			break;
@@ -706,6 +783,7 @@ void move(int direction)
 			if (x > MIN_X)
 			{
 				x = x - 10;
+				// draw head
 				putImage(x,y,8,8,snakeheadH,1,0);
 			}
 			break;
@@ -716,16 +794,12 @@ void move(int direction)
 			if (y > MIN_Y)
 			{
 				y = y - 10;
+				// draw head
 				putImage(x,y,8,8,snakeheadV,0,0);
 			}
 			break;
 		}
 	}
-	// draw head	
-	printDecimal(x);
-	printDecimal(y);
-
-	
 	updateBody1();
 
 	//remove duplicate head
@@ -749,6 +823,7 @@ void move2(int direction)
 			if (x2 < MAX_X)
 			{
 				x2 = x2 + 10;
+				// draw head
 				putImage(x2,y2,8,8,snakehead2H,0,0);
 			}
 			break;
@@ -759,6 +834,7 @@ void move2(int direction)
 			if (y2 < MAX_Y)
 			{
 				y2 = y2 + 10;
+				// draw head
 				putImage(x2,y2,8,8,snakehead2V,0,1);
 			}
 			break;
@@ -769,6 +845,7 @@ void move2(int direction)
 			if (x2 > MIN_X)
 			{
 				x2 = x2 - 10;
+				// draw head
 				putImage(x2,y2,8,8,snakehead2H,1,0);
 			}
 			break;
@@ -779,6 +856,7 @@ void move2(int direction)
 			if (y2 > MIN_Y)
 			{
 				y2 = y2 - 10;
+				// draw head
 				putImage(x2,y2,8,8,snakehead2V,0,0);
 			}
 			break;
@@ -809,7 +887,7 @@ void updateBody1()
 	endofSnake1--;
 
 	// score count printer
-	printNumber((endofSnake1-2), 10, 5, RGBToWord(0xff, 0xff, 0), 0);
+	printNumber((endofSnake1 - 2), 10, 5, RGBToWord(0xff, 0xff, 0), 0);
 
 
 	// delete trailing body piece
@@ -928,14 +1006,7 @@ void checkforCollision2(int endofSnake2)
 }
 void checkforCollision1(int endofSnake1)
 {
-	short endofSnake2 = 0;
-
-	// find end of snake (first 0 element)
-	while( snakeBody2[0][endofSnake2] != 0)
-	{
-		endofSnake2++;
-	}
-	endofSnake2--;
+	
 
 	for (int i = 1; i <= endofSnake1; i++)
 	{
@@ -958,6 +1029,15 @@ void checkforCollision1(int endofSnake1)
 	//checks if snake 2 exists
 	if(snakeBody2[0][0] != 0)
 	{
+		short endofSnake2 = 0;
+
+		// find end of snake 2 (first 0 element)
+		while( snakeBody2[0][endofSnake2] != 0)
+		{
+			endofSnake2++;
+		}
+		endofSnake2--;
+
 		for (int i = 1; i <= endofSnake1; i++)
 		{
 			//checks if snake 2 is colliding with this snake
@@ -1008,8 +1088,8 @@ void spawnApple()
 	appleX = ((rand() % 11) + 1) * 10;
 	appleY = ((rand() % 13) + 2) * 10;
 
-
 	
+
 	//check if apple is trying to spawn inside snake
 	while(snakeBody1[0][i] != 0 || snakeBody2[0][i] != 0)
 	{
@@ -1029,6 +1109,15 @@ void spawnApple()
 	}
 
 	putImage(appleX, appleY, 8, 8, apple, 0, 0);
+
+	
+
+	eputs("Apple Pos: (");
+	printDecimal(appleX);
+	eputs(",");
+	printDecimal(appleY);
+	eputs(")\n");
+	
 
 }
 
