@@ -10,6 +10,7 @@
 #define MIN_X 10
 #define MAX_X 110
 
+// default functions
 
 void initClock(void);
 void initSysTick(void);
@@ -53,7 +54,7 @@ const uint16_t apple[]=
 0,0,0,0,0,43008,0,0,0,41236,24579,0,43008,0,0,0,0,0,49973,40979,3410,39680,0,0,0,23841,65329,7985,55849,56922,48152,0,0,7482,39985,15409,23601,40754,64561,0,0,7482,39985,15409,15409,64561,15409,0,0,23841,16170,64561,23601,15409,7193,0,0,0,23874,64561,31017,7193,0,0,
 };
 
-
+// declaring our custom functions
 void move(int direction);
 void move2(int direction);
 
@@ -63,38 +64,41 @@ void updateBody2();
 void checkforCollision1(int);
 void checkforCollision2(int);
 
-void mainMenu();
-void creditScroll();
-
-int x = 60;
-int y = 70;
-int x2 = 70;
-int y2 = 70;
-int snakeBody1[3][MAX_SIZE] = {0};
-int snakeBody2[3][MAX_SIZE] = {0};
-
-short gameOverVar = 0;
-short currentCycle = 1;
-
-short appleX = 0;
-short appleY = 0;
-uint8_t appleEaten = 0;
-uint8_t is2Player = 0;
-
-uint16_t musicSequence[] = { 50, 200, 50, 150, 50, 200, 50, 30 };
-
-void drawBorder();
 void sneyk1P();
 void sneyk2P();
+
 void spawnApple();
 void gameOver(short);
 void gameOver2(short);
+
 void orangeOn(void);
 void orangeOff(void);
 void greenOn(void);
 void greenOff(void);
 
+void drawBorder();
 void printBanner();
+void mainMenu();
+void creditScroll();
+
+// can be 8-bit because x, y, x2, y2 can never reach 255.
+uint8_t x = 60;
+uint8_t y = 70;
+uint8_t x2 = 70;
+uint8_t y2 = 70;
+uint8_t snakeBody1[3][MAX_SIZE] = {0};
+uint8_t snakeBody2[3][MAX_SIZE] = {0};
+
+uint8_t gameOverVar = 0;
+uint8_t currentCycle = 1;
+uint8_t is2Player = 0;
+
+short appleX = 0;
+short appleY = 0;
+uint8_t appleEaten = 0;
+
+uint8_t musicSequence[] = { 50, 200, 50, 150, 50, 200, 50, 30 };
+
 
 int main()
 {
@@ -113,188 +117,154 @@ int main()
 	return 0;
 }
 
-void printBanner()
+
+void mainMenu()
 {
-	eputs("\n");
-	eputs(" ,---.  ,--.  ,--.,------.,--.   ,--.,--. ,--. ");
-	eputs("\n");
-	eputs("'   .-' |  ,'.|  ||  .---' \\  `.'  / |  .'   / ");
-	eputs("\n");
-	eputs("`.  `-. |  |' '  ||  `--,   '.    /  |  .   '  ");
-	eputs("\n");
-	eputs(".-'    ||  | `   ||  `---.    |  |   |  |\\   \\ ");
-	eputs("\n");
-	eputs("`-----' `--'  `--'`------'    `--'   `--' '--' ");
-	eputs("\n");
-	
-}
-
-void gameOver(short end1)
-{
-    currentCycle = 1;
-    gameOverVar = 1;
-
-	//this chunk of code flashes the snake to highlight that it has died
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
-    }
-
-    delay(500);
-
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
-    }
-
-    delay(500);
-
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
-    }
-
-    delay(500);
-
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
-    }
-
-    fillRectangle(0, 0, 128, 186, 0);
-	
+	int currentSelection = 0;
+	uint32_t currentTime = milliseconds;
+	uint32_t musicTime = milliseconds;
+	uint8_t musicToggle = 0;
+	int currentNote = 0;
+	fillRectangle(0,0,128,154,0);
+	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
 	
 
-	if(is2Player)
+	while(1)
 	{
-		// green died, turn on orange LED to show orange (P2) has won
-		orangeOn();
-		greenOff();
-		printTextX2("P2 WINS", 25, 90, RGBToWord(255, 255, 255), 0);
-	}
+		if(gameOverVar == 1)
+        {
+            x = 60;
+            y = 70;
+			x2 = 70;
+			y2 = 70;
+			is2Player = 0;
+            fillRectangle(0,0,128,154,0);
+            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+            gameOverVar = 0;
+			for(int k = 0; k < MAX_SIZE; k++)
+            {
+				//fill arrays with 0
+                snakeBody1[0][k] = 0;
+				snakeBody1[1][k] = 0;
+				snakeBody1[2][k] = 0;
 
-    for (int i = 100; i >= 0; i-=10)
-    {
-        fillRectangle(0, 40, 128, 30, 0);
-        printTextX2(" GAME OVER ", i, 50, RGBToWord(255, 255, 255), 0);
-        delay(200);
-    }
+				snakeBody2[0][k] = 0;
+				snakeBody2[1][k] = 0;
+				snakeBody2[2][k] = 0;
+            }
+        }
+		if(milliseconds - currentTime > 150)
+		{
+			if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
+			{
+				if(currentSelection == 2)
+				{
+					currentSelection = 0;
+				}
+				else
+				{
+					currentSelection++;
+				}
+				currentTime = milliseconds;
+			}
+			else if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
+			{
+				if(currentSelection == 0)
+				{
+					currentSelection = 2;
+				}
+				else
+				{
+					currentSelection--;
+				}
+				currentTime = milliseconds;
+			}
+		}
+		
+		if(milliseconds - musicTime > 200)
+		{
+			playNote(0);
+			musicTime = milliseconds;
+			musicToggle = 0;
+		}
+		else if(milliseconds - musicTime > 130)
+		{
+			if (musicToggle == 0)
+			{
+				playNote(musicSequence[currentNote]);
+				if(currentNote == 7)
+				{
+					currentNote = 0;
+				}
+				else
+				{
+					currentNote++;
+				}
+				musicToggle = 1;
+			}
+			
+		}
 
-	if(is2Player)
-	{
-		//triumphant note -- someone won
-		playNote(500);
-		delay(200);
-		playNote(700);
-		delay(200);
-		playNote(750);
-		delay(400);
-		playNote(0);
-		delay(1200);
-	}
-	else
-	{
-		//sad note -- only player lost
-		playNote(220);
-		delay(800);
-		playNote(150);
-		delay(1200);
-		playNote(0);
+
+		switch(currentSelection)
+		{
+			case 0:
+			{
+				printTextX2("1 PLAYER >", 10, 40, 255, 0);
+				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
+
+				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+				{
+					playNote(700);
+					delay(80);
+					playNote(0);			
+					sneyk1P();	
+				}
+
+
+				break;
+			}
+
+			case 1:
+			{
+				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("2 PLAYER >", 10, 70, 255, 0);
+				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
+				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+				{	
+					playNote(700);
+					delay(80);
+					playNote(0);				
+					sneyk2P();	
+				}
+
+				break;
+			}
+
+			case 2:
+			{
+				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
+				printTextX2("CREDITS >", 10, 100, 255, 0);
+				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
+				{	
+					playNote(700);
+					delay(80);
+					playNote(0);	
+					creditScroll();	
+				}
+				
+				break;
+			}
+		}
+		
 	}
 
 }
 
-void gameOver2(short end1)
-{
-    currentCycle = 1;
-    gameOverVar = 1;
-
-	//this chunk of code flashes the snake to highlight that it has died
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
-    }
-
-    delay(500);
-
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
-    }
-
-    delay(500);
-
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
-    }
-
-    delay(500);
-
-    for (int j = 0; j <= end1; j++)
-    {
-        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
-    }
-	
-	// orange died, turn on green LED to show green (P1) has won
-	orangeOff();
-	greenOn();
-
-    fillRectangle(0, 0, 128, 186, 0);
-
-	if(is2Player)
-	{
-		printTextX2("P1 WINS", 25, 90, RGBToWord(255, 255, 255), 0);
-	}
-
-    for (int i = 100; i >= 0; i-=10)
-    {
-        fillRectangle(0, 40, 128, 30, 0);
-        printTextX2(" GAME OVER ", i, 50, RGBToWord(255, 255, 255), 0);
-        delay(200);
-    }
-
-    if(is2Player)
-	{
-		//triumphant note -- someone won
-		playNote(500);
-		delay(200);
-		playNote(700);
-		delay(200);
-		playNote(750);
-		delay(400);
-		playNote(0);
-		delay(1200);
-	}
-	else
-	{
-		//sad note -- only player lost
-		playNote(220);
-		delay(800);
-		playNote(150);
-		delay(1200);
-		playNote(0);
-	}
-
-}
-
-void orangeOn()
-{
-    GPIOA->ODR |= (1 << 1);
-}
-void orangeOff()
-{
-    GPIOA->ODR &= ~(1 << 1);
-}
-
-void greenOn()
-{
-    GPIOA->ODR |= (1 << 0);
-}
-void greenOff()
-{
-    GPIOA->ODR &= ~(1 << 0);
-}
 
 void sneyk1P()
 {
@@ -386,6 +356,7 @@ void sneyk1P()
 		delay(50);
 	}
 }
+
 
 void sneyk2P()
 {
@@ -570,185 +541,6 @@ void sneyk2P()
 	}
 }
 
-void creditScroll()
-{
-	
-	fillRectangle(0,0,128,154,0);
-
-	// prints over and over at different y to 'scroll'
-	for (int i = 140; i >= 1; i--)
-	{
-		printTextX2("DORIAN", 10, i, RGBToWord(0, 50, 255), 0);
-		printTextX2("          ", 10, i + 14, 0, 0);
-		printTextX2("DZIGUMOVIC", 10, i + 28, RGBToWord(0, 50, 255), 0);
-		printTextX2("          ", 10, i + 42, 0, 0);
-		printTextX2("KENTON", 10, i + 56, RGBToWord(0, 255, 0), 0);
-		printTextX2("          ", 10, i + 70, 0, 0);
-		printTextX2("KAMTCHOU", 10, i + 84, RGBToWord(0, 255, 0), 0);
-		printTextX2("          ", 10, i + 98, 0, 0);
-		if (i < 48)
-		{
-			printTextX2("NATHAN", 10, i + 112, RGBToWord(255, 0, 0), 0);
-			printTextX2("          ", 10, i + 126, 0, 0);
-			printTextX2("DANIEL", 10, i + 140, RGBToWord(255, 0, 0), 0);
-			printTextX2("          ", 10, i + 154, 0, 0);
-
-		}
-		delay(15);
-	}
-
-	delay(3000);
-	fillRectangle(0,0,128,156,0);
-	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
-	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-}
-
-void mainMenu()
-{
-	int currentSelection = 0;
-	uint32_t currentTime = milliseconds;
-	uint32_t musicTime = milliseconds;
-	uint8_t musicToggle = 0;
-	int currentNote = 0;
-	fillRectangle(0,0,128,154,0);
-	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
-	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-	
-
-	while(1)
-	{
-		if(gameOverVar == 1)
-        {
-            x = 60;
-            y = 70;
-			x2 = 70;
-			y2 = 70;
-			is2Player = 0;
-            fillRectangle(0,0,128,154,0);
-            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
-            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-            gameOverVar = 0;
-			for(int k = 0; k < MAX_SIZE; k++)
-            {
-				//fill arrays with 0
-                snakeBody1[0][k] = 0;
-				snakeBody1[1][k] = 0;
-				snakeBody1[2][k] = 0;
-
-				snakeBody2[0][k] = 0;
-				snakeBody2[1][k] = 0;
-				snakeBody2[2][k] = 0;
-            }
-        }
-		if(milliseconds - currentTime > 150)
-		{
-			if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
-			{
-				if(currentSelection == 2)
-				{
-					currentSelection = 0;
-				}
-				else
-				{
-					currentSelection++;
-				}
-				currentTime = milliseconds;
-			}
-			else if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
-			{
-				if(currentSelection == 0)
-				{
-					currentSelection = 2;
-				}
-				else
-				{
-					currentSelection--;
-				}
-				currentTime = milliseconds;
-			}
-		}
-		
-		if(milliseconds - musicTime > 200)
-		{
-			playNote(0);
-			musicTime = milliseconds;
-			musicToggle = 0;
-		}
-		else if(milliseconds - musicTime > 130)
-		{
-			if (musicToggle == 0)
-			{
-				playNote(musicSequence[currentNote]);
-				if(currentNote == 7)
-				{
-					currentNote = 0;
-				}
-				else
-				{
-					currentNote++;
-				}
-				musicToggle = 1;
-			}
-			
-		}
-
-
-		switch(currentSelection)
-		{
-			case 0:
-			{
-				printTextX2("1 PLAYER >", 10, 40, 255, 0);
-				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
-				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
-
-				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
-				{
-					playNote(700);
-					delay(80);
-					playNote(0);			
-					sneyk1P();	
-				}
-
-
-				break;
-			}
-
-			case 1:
-			{
-				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
-				printTextX2("2 PLAYER >", 10, 70, 255, 0);
-				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
-				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
-				{	
-					playNote(700);
-					delay(80);
-					playNote(0);				
-					sneyk2P();	
-				}
-
-				break;
-			}
-
-			case 2:
-			{
-				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
-				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
-				printTextX2("CREDITS >", 10, 100, 255, 0);
-				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
-				{	
-					playNote(700);
-					delay(80);
-					playNote(0);	
-					creditScroll();	
-				}
-				
-				break;
-			}
-		}
-		
-	}
-
-}
 
 void move(int direction)
 {
@@ -812,6 +604,7 @@ void move(int direction)
 	
 }
 
+
 void move2(int direction)
 {
 	
@@ -871,9 +664,8 @@ void move2(int direction)
 		fillRectangle(snakeBody2[1][1], snakeBody2[2][1], 8, 8, RGBToWord(255,180,21));
 	}
 
-	
-	
 }
+
 
 void updateBody1()
 {
@@ -912,7 +704,6 @@ void updateBody1()
 	checkforCollision1(endofSnake1);
 	
 }
-
 void updateBody2()
 {
 	short endofSnake2 = 0;
@@ -951,59 +742,6 @@ void updateBody2()
 	
 }
 
-void checkforCollision2(int endofSnake2)
-{
-	short endofSnake1 = 0;
-
-	// find end of snake (first 0 element)
-	while( snakeBody1[0][endofSnake1] != 0)
-	{
-		endofSnake1++;
-	}
-	endofSnake1--;
-
-	for (int i = 1; i <= endofSnake2; i++)
-	{
-		// checks if this snake is hitting itself
-		if (x2 == snakeBody2[1][i])
-		{
-			if(y2 == snakeBody2[2][i])
-			{
-				for (int j = 0; j <= endofSnake2; j++)
-				{
-					fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
-				}
-				gameOver2(endofSnake2);
-				break;
-			}
-		}
-
-		// checks if snake 1 is colliding with this snake
-		if (x == snakeBody2[1][i])
-		{
-			if(y == snakeBody2[2][i])
-			{
-				for (int j = 0; j <= endofSnake2; j++)
-				{
-					fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
-				}
-				gameOver(endofSnake1);
-				break;
-			}
-		}
-	}
-	
-
-	// nom nom
-	if (x2 == appleX && y2 == appleY)
-	{
-		//eat the apple, get longer
-		snakeBody2[0][endofSnake2 + 1] = 1;
-		appleEaten = 1;
-		spawnApple();
-	}
-
-}
 void checkforCollision1(int endofSnake1)
 {
 	
@@ -1067,12 +805,206 @@ void checkforCollision1(int endofSnake1)
 	}
 
 }
-
-void drawBorder()
+void checkforCollision2(int endofSnake2)
 {
-	fillRectangle(0,0,128,14,0);
-	fillRectangle(0,14,128,154,RGBToWord(255,8,0));
-	fillRectangle(MIN_X, MIN_Y, MAX_X - 2, MAX_Y - 2, 0);
+	short endofSnake1 = 0;
+
+	// find end of snake (first 0 element)
+	while( snakeBody1[0][endofSnake1] != 0)
+	{
+		endofSnake1++;
+	}
+	endofSnake1--;
+
+	for (int i = 1; i <= endofSnake2; i++)
+	{
+		// checks if this snake is hitting itself
+		if (x2 == snakeBody2[1][i])
+		{
+			if(y2 == snakeBody2[2][i])
+			{
+				for (int j = 0; j <= endofSnake2; j++)
+				{
+					fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+				}
+				gameOver2(endofSnake2);
+				break;
+			}
+		}
+
+		// checks if snake 1 is colliding with this snake
+		if (x == snakeBody2[1][i])
+		{
+			if(y == snakeBody2[2][i])
+			{
+				for (int j = 0; j <= endofSnake2; j++)
+				{
+					fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
+				}
+				gameOver(endofSnake1);
+				break;
+			}
+		}
+	}
+	
+
+	// nom nom
+	if (x2 == appleX && y2 == appleY)
+	{
+		//eat the apple, get longer
+		snakeBody2[0][endofSnake2 + 1] = 1;
+		appleEaten = 1;
+		spawnApple();
+	}
+
+}
+
+void gameOver(short end1)
+{
+    currentCycle = 1;
+    gameOverVar = 1;
+
+	//this chunk of code flashes the snake to highlight that it has died
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody1[1][j], snakeBody1[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    fillRectangle(0, 0, 128, 186, 0);
+	
+	
+
+	if(is2Player)
+	{
+		// green died, turn on orange LED to show orange (P2) has won
+		orangeOn();
+		greenOff();
+		printTextX2("P2 WINS", 25, 90, RGBToWord(255, 255, 255), 0);
+	}
+
+    for (int i = 100; i >= 0; i-=10)
+    {
+        fillRectangle(0, 40, 128, 30, 0);
+        printTextX2(" GAME OVER ", i, 50, RGBToWord(255, 255, 255), 0);
+        delay(200);
+    }
+
+	if(is2Player)
+	{
+		//triumphant note -- someone won
+		playNote(500);
+		delay(200);
+		playNote(700);
+		delay(200);
+		playNote(750);
+		delay(400);
+		playNote(0);
+		delay(1200);
+	}
+	else
+	{
+		//sad note -- only player lost
+		playNote(220);
+		delay(800);
+		playNote(150);
+		delay(1200);
+		playNote(0);
+	}
+
+}
+void gameOver2(short end1)
+{
+    currentCycle = 1;
+    gameOverVar = 1;
+
+	//this chunk of code flashes the snake to highlight that it has died
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, 255);
+    }
+
+    delay(500);
+
+    for (int j = 0; j <= end1; j++)
+    {
+        fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
+    }
+	
+	// orange died, turn on green LED to show green (P1) has won
+	orangeOff();
+	greenOn();
+
+    fillRectangle(0, 0, 128, 186, 0);
+
+	if(is2Player)
+	{
+		printTextX2("P1 WINS", 25, 90, RGBToWord(255, 255, 255), 0);
+	}
+
+    for (int i = 100; i >= 0; i-=10)
+    {
+        fillRectangle(0, 40, 128, 30, 0);
+        printTextX2(" GAME OVER ", i, 50, RGBToWord(255, 255, 255), 0);
+        delay(200);
+    }
+
+    if(is2Player)
+	{
+		//triumphant note -- someone won
+		playNote(500);
+		delay(200);
+		playNote(700);
+		delay(200);
+		playNote(750);
+		delay(400);
+		playNote(0);
+		delay(1200);
+	}
+	else
+	{
+		//sad note -- only player lost
+		playNote(220);
+		delay(800);
+		playNote(150);
+		delay(1200);
+		playNote(0);
+	}
+
 }
 
 void spawnApple()
@@ -1120,6 +1052,82 @@ void spawnApple()
 	
 
 }
+
+void orangeOn()
+{
+    GPIOA->ODR |= (1 << 1);
+}
+void orangeOff()
+{
+    GPIOA->ODR &= ~(1 << 1);
+}
+
+void greenOn()
+{
+    GPIOA->ODR |= (1 << 0);
+}
+void greenOff()
+{
+    GPIOA->ODR &= ~(1 << 0);
+}
+
+void creditScroll()
+{
+	
+	fillRectangle(0,0,128,154,0);
+
+	// prints over and over at different y to 'scroll'
+	for (int i = 140; i >= 1; i--)
+	{
+		printTextX2("DORIAN", 10, i, RGBToWord(0, 50, 255), 0);
+		printTextX2("          ", 10, i + 14, 0, 0);
+		printTextX2("DZIGUMOVIC", 10, i + 28, RGBToWord(0, 50, 255), 0);
+		printTextX2("          ", 10, i + 42, 0, 0);
+		printTextX2("KENTON", 10, i + 56, RGBToWord(0, 255, 0), 0);
+		printTextX2("          ", 10, i + 70, 0, 0);
+		printTextX2("KAMTCHOU", 10, i + 84, RGBToWord(0, 255, 0), 0);
+		printTextX2("          ", 10, i + 98, 0, 0);
+		if (i < 48)
+		{
+			printTextX2("NATHAN", 10, i + 112, RGBToWord(255, 0, 0), 0);
+			printTextX2("          ", 10, i + 126, 0, 0);
+			printTextX2("DANIEL", 10, i + 140, RGBToWord(255, 0, 0), 0);
+			printTextX2("          ", 10, i + 154, 0, 0);
+
+		}
+		delay(15);
+	}
+
+	delay(3000);
+	fillRectangle(0,0,128,156,0);
+	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+}
+void printBanner()
+{
+	eputs("\n");
+	eputs(" ,---.  ,--.  ,--.,------.,--.   ,--.,--. ,--. ");
+	eputs("\n");
+	eputs("'   .-' |  ,'.|  ||  .---' \\  `.'  / |  .'   / ");
+	eputs("\n");
+	eputs("`.  `-. |  |' '  ||  `--,   '.    /  |  .   '  ");
+	eputs("\n");
+	eputs(".-'    ||  | `   ||  `---.    |  |   |  |\\   \\ ");
+	eputs("\n");
+	eputs("`-----' `--'  `--'`------'    `--'   `--' '--' ");
+	eputs("\n");
+	
+}
+void drawBorder()
+{
+	fillRectangle(0,0,128,14,0);
+	fillRectangle(0,14,128,154,RGBToWord(255,8,0));
+	fillRectangle(MIN_X, MIN_Y, MAX_X - 2, MAX_Y - 2, 0);
+}
+
+
+
+
 
 void initSysTick(void)
 {
