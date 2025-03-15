@@ -79,6 +79,8 @@ short appleX = 0;
 short appleY = 0;
 uint8_t appleEaten = 0;
 
+uint16_t musicSequence[] = { 50,100,50,100,50,100,50,700 };
+
 void drawBorder();
 void sneyk1P();
 void sneyk2P();
@@ -95,12 +97,12 @@ int main()
 	initClock();
 	initSysTick();
 	setupIO();
-	// initSound();
-	// pinMode(GPIOA,1,1); // Make GPIOA bit 1 an output
-	// pinMode(GPIOA,0,1); // Make GPIOA bit 0 an output
+	initSound();
+	pinMode(GPIOA,1,1); // Make GPIOA bit 1 an output
+	pinMode(GPIOA,0,1); // Make GPIOA bit 0 an output
 
 	initSerial();
-
+	
 	mainMenu();
 	return 0;
 }
@@ -136,6 +138,9 @@ void gameOver(short end1)
     }
 
     fillRectangle(0, 0, 128, 186, 0);
+	
+	orangeOn();
+	greenOff();
 
     for (int i = 100; i >= 0; i-=10)
     {
@@ -181,6 +186,9 @@ void gameOver2(short end1)
     {
         fillRectangle(snakeBody2[1][j], snakeBody2[2][j], 8, 8, RGBToWord(0xff, 0xff, 0));
     }
+
+	orangeOff();
+	greenOn();
 
     fillRectangle(0, 0, 128, 186, 0);
 
@@ -347,14 +355,7 @@ void sneyk2P()
         {
 			
             gameOverVar = 0;
-            x = 60;
-            y = 70;
-			x2 = 70;
-			y2 = 70;
-            fillRectangle(0,0,128,154,0);
-            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
-            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
-            for(int k = 3; k < MAX_SIZE; k++)
+			for(int k = 3; k < MAX_SIZE; k++)
             {
                 snakeBody1[0][k] = 0;
 				snakeBody1[1][k] = 0;
@@ -363,6 +364,14 @@ void sneyk2P()
 				snakeBody2[1][k] = 0;
 				snakeBody2[2][k] = 0;
             }
+            x = 60;
+            y = 70;
+			x2 = 70;
+			y2 = 70;
+            fillRectangle(0,0,128,154,0);
+            printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
+            printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
+            
 		}
 
 		//get p1 direction
@@ -396,7 +405,7 @@ void sneyk2P()
 		}
 		
 		//get p2 direction
-		//p2Input = egetchar();
+		p2Input = egetchar();
 		eputchar(p2Input);
 
 		switch(p2Input)
@@ -529,6 +538,10 @@ void creditScroll()
 void mainMenu()
 {
 	int currentSelection = 0;
+	uint32_t currentTime = milliseconds;
+	uint32_t musicTime = milliseconds;
+	uint8_t musicToggle = 0;
+	int currentNote = 0;
 	fillRectangle(0,0,128,154,0);
 	printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
 	printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
@@ -539,10 +552,10 @@ void mainMenu()
 		if(gameOverVar == 1)
         {
             gameOverVar = 0;
-            x = 50;
-            y = 50;
-			x2 = 40;
-			y2 = 120;
+            x = 60;
+            y = 70;
+			x2 = 70;
+			y2 = 70;
             fillRectangle(0,0,128,154,0);
             printTextX2("__________", 5, 8, RGBToWord(0xff,0xff,0), 0);
             printTextX2("SNEYK", 35, 0, RGBToWord(0xff,0xff,0), 0);
@@ -552,37 +565,58 @@ void mainMenu()
 				snakeBody2[0][k] = 0;
             }
         }
+		if(milliseconds - currentTime > 150)
+		{
+			if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
+			{
+				if(currentSelection == 2)
+				{
+					currentSelection = 0;
+				}
+				else
+				{
+					currentSelection++;
+				}
+				currentTime = milliseconds;
+			}
+			else if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
+			{
+				if(currentSelection == 0)
+				{
+					currentSelection = 2;
+				}
+				else
+				{
+					currentSelection--;
+				}
+				currentTime = milliseconds;
+			}
+		}
+		
+		if(milliseconds - musicTime > 400)
+		{
+			playNote(0);
+			musicTime = milliseconds;
+			musicToggle = 0;
+		}
+		else if(milliseconds - musicTime > 330)
+		{
+			if (musicToggle == 0)
+			{
+				playNote(musicSequence[currentNote]);
+				if(currentNote == 7)
+				{
+					currentNote = 0;
+				}
+				else
+				{
+					currentNote++;
+				}
+				musicToggle = 1;
+			}
+			
+		}
 
-		if ( (GPIOA->IDR & (1 << 11)) == 0) // down pressed
-		{
-			if(currentSelection == 2)
-			{
-				currentSelection = 0;
-			}
-			else
-			{
-				currentSelection++;
-			}
-			playNote(200);
-			delay(50);
-			playNote(0);
-			delay(100);
-		}
-		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
-		{
-			if(currentSelection == 0)
-			{
-				currentSelection = 2;
-			}
-			else
-			{
-				currentSelection--;
-			}
-			playNote(200);
-			delay(50);
-			playNote(0);
-			delay(100);
-		}
 
 		switch(currentSelection)
 		{
@@ -591,7 +625,6 @@ void mainMenu()
 				printTextX2("1 PLAYER >", 10, 40, 255, 0);
 				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
-				eputchar('1');
 
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{
@@ -610,7 +643,6 @@ void mainMenu()
 				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("2 PLAYER >", 10, 70, 255, 0);
 				printTextX2("CREDITS  ", 10, 100, RGBToWord(0xff,0xff,0), 0);
-				eputchar('2');
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{	
 					playNote(700);
@@ -627,7 +659,6 @@ void mainMenu()
 				printTextX2("1 PLAYER  ", 10, 40, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("2 PLAYER  ", 10, 70, RGBToWord(0xff,0xff,0), 0);
 				printTextX2("CREDITS >", 10, 100, 255, 0);
-				eputchar('3');
 				if ((GPIOB->IDR & (1 << 4)) == 0) // right pressed
 				{	
 					playNote(700);

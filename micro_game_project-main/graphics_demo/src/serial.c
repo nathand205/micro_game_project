@@ -31,7 +31,10 @@ void eputchar(char c)
 }
 char egetchar()
 {
-	while((USART1->ISR & (1 << 5)) == 0);
+	if((USART1->ISR & (1 << 5)) == 0)
+	{
+		return '0';
+	}
 	 // if no character coming
 	
 	return (char)USART1->RDR; // return the character that is waiting in the Receive Data Register
